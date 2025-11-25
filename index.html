@@ -553,11 +553,14 @@
             clearDotMatrix(svgDoc);
           }
           // 各方案的光照强度延迟策略
-          if (currentAutoProfile === 'B' || isAutoE || isAutoF) {
-            // 自动B：1.5秒后点亮；自动E/F：保持Hi显示2秒，光照强度1.5秒后到2秒内点亮
+          if (currentAutoProfile === 'B' || isAutoE) {
+            // 自动B/E：1.5秒后点亮
             step1LightTimer = setTimeout(() => {
               setSymbolVisible(svgDoc, '光照强度', true);
             }, 1500);
+          } else if (isAutoF) {
+            // 自动F：第一步完全不显示光照强度
+            setSymbolVisible(svgDoc, '光照强度', false);
           } else {
             // 其他方案立即显示光照强度
             setSymbolVisible(svgDoc, '光照强度', true);
