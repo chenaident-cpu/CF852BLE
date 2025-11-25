@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>光伏體脂秤 UI</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #0f1620cc;
+      --muted: #9fb0c1;
+      --text: #e7eef6;
+      --accent: #4cc9f0;
+      --accent-2: #22c55e;
+      --danger: #ef4444;
+      --card: #0f1724;
+      --border: #1e293b;
+      --shadow: 0 10px 30px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.02) inset;
+      --topbar-h: 58px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 600px at 80% -10%, #15314a44, transparent),
+                  radial-gradient(1000px 500px at -10% 110%, #143a2f55, transparent),
+                  var(--bg);
+      color: var(--text);
+      font: 14px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Helvetica, Arial, "Microsoft YaHei", "PingFang SC", "Hiragino Sans", sans-serif;
+      letter-spacing: .2px;
+    }
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+    .app__topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: saturate(140%) blur(10px);
+      background: linear-gradient(180deg, rgba(15, 22, 32, .75), rgba(15, 22, 32, .35));
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar__inner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      letter-spacing: .4px;
+    }
+    .brand__dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      box-shadow: 0 0 0 4px rgba(76, 201, 240, .12), 0 0 24px rgba(76, 201, 240, .5);
+    }
+    .topbar__spacer { flex: 1; }
+    .topbar__actions { display: flex; gap: 8px; }
+    .play-group { display: flex; align-items: center; gap: 8px; }
+    .btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #0f1724, #0c1320);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform .08s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: #314560; }
+    .btn:active { transform: translateY(0); }
+    .btn--accent {
+      border-color: #1f9bd4;
+      background: linear-gradient(180deg, #102437, #0d1b2b);
+      color: #c3eaff;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 18px;
+      padding: 18px;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    .view {
+      background: linear-gradient(180deg, rgba(16, 24, 36, .9), rgba(13, 19, 31, .9));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      min-height: 300px;
+      position: sticky;
+      top: calc(var(--topbar-h) + 18px);
+      align-self: start;
+      z-index: 1;
+    }
+    .view__frame {
+      background: #0b111d;
+      border: 1px solid #223046;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      padding: 8px;
+      min-height: 340px;
+      position: relative;
+    }
+    .view__nav { margin-top: 10px; }
+    object#svgObj { width: 100%; height: 520px; max-height: 64vh; }
+    .overlay-svg-container {
+      position: absolute;
+      top: 20%;
+      left: 46%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 2;
+      transition: top 0.2s ease, left 0.2s ease, width 0.3s ease, height 0.3s ease;
+    }
+    .overlay-svg-container svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .panel {
+      display: grid;
+      gap: 12px;
+    }
+    .card {
+      background: linear-gradient(180deg, #0f1724, #0c1320);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .card__title {
+      display: flex; align-items: center; gap: 8px;
+      font-weight: 600; margin: 0 0 8px 0; color: #dbeafe;
+    }
+    .form {
+      display: grid; gap: 8px;
+    }
+    .field { display: grid; gap: 6px; }
+    .label { font-size: 12px; color: var(--muted); letter-spacing: .3px; }
+    .input, .textarea {
+      width: 100%;
+      background: #0a1220;
+      color: var(--text);
+      border: 1px solid #203047;
+      border-radius: 10px;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    .textarea { resize: vertical; min-height: 90px; }
+    .input::placeholder, .textarea::placeholder { color: #66768a; }
+    .input:focus, .textarea:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,.15); }
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: #203047;
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #3b82f6;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      background: #3b82f6;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+    .actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .kbd { font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; color: #93c5fd; }
+    .hint { color: #7c8da3; font-size: 12px; }
+    .toggle-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    @media (min-width: 480px) { .toggle-group { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    .btn--ghost { background: linear-gradient(180deg, #0d1524, #0a111d); border-color: #223147; }
+    .assets { display: grid; gap: 8px; }
+    .asset-item { display: flex; align-items: center; gap: 8px; justify-content: space-between; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; background: #0a1220; }
+    .asset-name { color: #cfe6ff; font-weight: 600; }
+    .asset-actions { display: flex; gap: 6px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app__topbar">
+      <div class="topbar__inner">
+        <div class="brand"><span class="brand__dot"></span>光伏體脂秤 UI</div>
+        <div class="topbar__spacer"></div>
+        <div class="topbar__actions play-group">
+          <button id="playAll" class="btn btn--accent">播放全部</button>
+          <button id="applyBoot" class="btn">开机动画</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="view">
+        <div class="card__title">设备显示</div>
+        <div class="view__frame">
+          <object id="svgObj" data="光伏秤UI.svg" type="image/svg+xml"></object>
+          <div id="overlaySvgContainer" class="overlay-svg-container" style="width: 6px; height: auto; left: 46%; top: 20%; display: none;">
+            <object id="overlaySvgObj" data="121.svg" type="image/svg+xml"></object>
+          </div>
+        </div>
+        <div class="view__nav actions">
+          <button id="prevStep" class="btn">上一步</button>
+          <button id="nextStep" class="btn btn--accent">下一步</button>
+        </div>
+        <div class="card" style="margin-top: 12px;">
+          <h3 class="card__title">叠加图标控制</h3>
+          <div class="form">
+            <div class="field">
+              <label class="label">图标大小</label>
+              <input id="overlaySizeInput" class="input" type="range" min="5" max="50" value="6" step="1">
+              <div class="hint">当前大小: <span id="overlaySizeValue">6</span>px</div>
+            </div>
+            <div class="field">
+              <label class="label">水平位置 (X)</label>
+              <input id="overlayXInput" class="input" type="range" min="0" max="100" value="46" step="1">
+              <div class="hint">当前位置: <span id="overlayXValue">46</span>%</div>
+            </div>
+            <div class="field">
+              <label class="label">垂直位置 (Y)</label>
+              <input id="overlayYInput" class="input" type="range" min="0" max="100" value="20" step="1">
+              <div class="hint">当前位置: <span id="overlayYValue">20</span>%</div>
+            </div>
+            <div class="actions">
+              <button id="toggleOverlay" class="btn">显示/隐藏</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="card">
+          <h3 class="card__title">数值显示</h3>
+          <div class="form">
+            <div class="field">
+              <label class="label" for="numberInput">输入数值</label>
+              <input id="numberInput" class="input" type="text" placeholder="如 123.45 / 199.9 / 201">
+              <div class="hint">≥200 时将自动移位，切换小数点至第2位</div>
+            </div>
+            <div class="actions">
+              <button id="applyNumber" class="btn">显示数值</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card__title">点阵显示</h3>
+          <div class="form">
+            <div class="field">
+              <label class="label" for="matrixInput">输入 6×14 点阵</label>
+              <textarea id="matrixInput" class="textarea" placeholder="6 行以 | 分隔，例如：\n11100011100011|00000000000000|...\n或坐标: a1,b5,c10  (a-f 为行，1-14 为列)" rows="6"></textarea>
+              <div class="hint">快捷键 <span class="kbd">Ctrl/Cmd + Enter</span> 应用</div>
+            </div>
+            <div class="actions">
+              <button id="applyMatrix" class="btn">显示点阵</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card__title">字母/汉字（滚动）</h3>
+          <div class="form">
+            <div class="field">
+              <label class="label" for="lettersInput">输入文本</label>
+              <input id="lettersInput" class="input" type="text" placeholder="支持字母与汉字（汉字转拼音首字母），右对齐从第14列开始滚动">
+            </div>
+            <div class="actions">
+              <button id="applyLetters" class="btn">显示字母</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card__title">符号区域（独立控制）</h3>
+          <div class="form">
+            <div class="field">
+              <div class="label">单独开/关符号</div>
+              <div class="toggle-group">
+                <button class="btn btn--ghost symbol-toggle" data-symbol="斤">斤</button>
+                <button class="btn btn--ghost symbol-toggle" data-symbol="kg">kg</button>
+                <button class="btn btn--ghost symbol-toggle" data-symbol="光照强度">光照强度</button>
+                <button class="btn btn--ghost symbol-toggle" data-symbol="_x25_">%</button>
+                <button class="btn btn--ghost symbol-toggle" data-symbol="蓝牙图标">蓝牙</button>
+                <button class="btn btn--ghost symbol-toggle" data-symbol="分割线">分割线</button>
+              </div>
+              <div class="hint">点击按钮可切换对应 SVG 元素显隐，不再依赖父级分组</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card__title">素材库（点阵动画录制）</h3>
+          <div class="form">
+            <div class="field">
+              <label class="label" for="assetNameInput">动画名称</label>
+              <input id="assetNameInput" class="input" type="text" placeholder="为动画命名，例如：扫光1、心跳v2">
+            </div>
+            <div class="actions">
+              <button id="startRecord" class="btn">开始录制</button>
+              <button id="stopSaveRecord" class="btn btn--accent">停止并保存</button>
+            </div>
+            <div class="field">
+              <div class="label">已保存动画</div>
+              <div id="assetList" class="assets"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card__title">自动演示</h3>
+          <div class="actions">
+            <button id="autoDemoPlayBtn" class="btn btn--accent">自动播放</button>
+            <button id="autoDemoStopBtn" class="btn" disabled>停止</button>
+          </div>
+          <div class="form" style="margin-top:8px;">
+            <div class="field">
+              <label class="label" for="autoDemoProfile">演示方案</label>
+              <select id="autoDemoProfile" class="input">
+                <option value="A">自动A</option>
+                <option value="B">自动B</option>
+                <option value="C">自动C</option>
+                <option value="D">自动D</option>
+                <option value="E">自动E</option>
+                <option value="F">自动F</option>
+              </select>
+            </div>
+          </div>
+          <div class="hint">自动顺序播放全部步骤，适合展示演示流程</div>
+        </div>
+      </aside>
+    </main>
+  </div>
+  <script>
+    (function() {
+      // 七段数码段位映射 a-g
+      const DIGIT_TO_SEGMENTS = {
+        '0': new Set(['a','b','c','d','e','f']),
+        '1': new Set(['b','c']),
+        '2': new Set(['a','b','d','e','g']),
+        '3': new Set(['a','b','c','d','g']),
+        '4': new Set(['b','c','f','g']),
+        '5': new Set(['a','c','d','f','g']),
+        '6': new Set(['a','c','d','e','f','g']),
+        '7': new Set(['a','b','c']),
+        '8': new Set(['a','b','c','d','e','f','g']),
+        '9': new Set(['a','b','c','d','f','g'])
+      };
+
+      // 位置映射：
+      // 数字1 => 百位，仅 b,c 两段
+      // 数字2 => 十位，a-g
+      // 数字3 => 个位，a-g
+      // 数字4 => 小数第1位，a-g
+      // 数字5 => 小数第2位，a-g
+      const POS_MAP = {
+        1: { b: '_x31_b', c: '_x31_c' },
+        2: { a: '_x32_a', b: '_x32_b', c: '_x32_c', d: '_x32_d', e: '_x32_e', f: '_x32_f', g: '_x32_g' },
+        3: { a: '_x33_a', b: '_x33_b', c: '_x33_c', d: '_x33_d', e: '_x33_e', f: '_x33_f', g: '_x33_g' },
+        4: { a: '_x34_a', b: '_x34_b', c: '_x34_c', d: '_x34_d', e: '_x34_e', f: '_x34_f', g: '_x34_g' },
+        5: { a: '_x35_a', b: '_x35_b', c: '_x35_c', d: '_x35_d', e: '_x35_e', f: '_x35_f', g: '_x35_g' }
+      };
+
+      function collectTargets(svgDoc, id) {
+        const list = [];
+        const direct = svgDoc.getElementById(id);
+        if (direct) list.push(direct);
+        const uses = svgDoc.querySelectorAll(`use[href="#${id}"] , use[xlink\\:href="#${id}"]`);
+        uses.forEach(u => list.push(u));
+        return list;
+      }
+
+      function setVisible(nodes, visible) {
+        nodes.forEach(n => {
+          n.setAttribute('visibility', visible ? 'visible' : 'hidden');
+          if (n.style) n.style.opacity = visible ? '1' : '0';
+        });
+      }
+
+      function ensureAncestorsVisible(node) {
+        let cur = node;
+        while (cur && cur.ownerSVGElement) {
+          if (cur.setAttribute) {
+            cur.setAttribute('visibility', 'visible');
+          }
+          cur = cur.parentNode;
+        }
+      }
+
+      function getCurrentVisible(node) {
+        const v = node.getAttribute && node.getAttribute('visibility');
+        if (v === 'hidden') return false;
+        return true;
+      }
+
+      function setSymbolVisible(svgDoc, symbolId, visible) {
+        const targets = collectTargets(svgDoc, symbolId);
+        if (!targets.length) return false;
+        if (visible) {
+          targets.forEach(n => ensureAncestorsVisible(n));
+        }
+        setVisible(targets, !!visible);
+        return true;
+      }
+
+      function toggleSymbol(svgDoc, symbolId) {
+        const targets = collectTargets(svgDoc, symbolId);
+        if (!targets.length) return false;
+        // If any target currently visible, we turn all off; else turn all on
+        const anyVisible = targets.some(n => getCurrentVisible(n));
+        if (!anyVisible) targets.forEach(n => ensureAncestorsVisible(n));
+        setVisible(targets, !anyVisible);
+        return !anyVisible;
+      }
+
+      // —— 场景步骤控制 ——
+      let numberRampTimer = null;
+      let numberFlashTimer = null;
+      let numberDelayTimer = null;
+      let step6SwitchTimer = null;
+      let dStep6CloseTimer = null;
+      let step1LightTimer = null;
+      function playNumberRamp(svgDoc, startStr, endStr, durationMs = 1000, frames = 40) {
+        if (numberRampTimer) { clearInterval(numberRampTimer); numberRampTimer = null; }
+        const s = parseFloat(String(startStr).replace(/[^0-9.\-]/g, '')) || 0;
+        const e = parseFloat(String(endStr).replace(/[^0-9.\-]/g, '')) || 0;
+        const steps = Math.max(1, frames | 0);
+        const stepMs = Math.max(20, Math.floor(durationMs / steps));
+        let i = 0;
+        const tick = () => {
+          if (i >= steps) {
+            applyNumber(svgDoc, endStr);
+            clearInterval(numberRampTimer); numberRampTimer = null; return;
+          }
+          const t = steps === 1 ? 1 : (i / (steps - 1));
+          const val = s + (e - s) * t;
+          applyNumber(svgDoc, val.toFixed(2));
+          i++;
+        };
+        tick();
+        numberRampTimer = setInterval(tick, stepMs);
+      }
+
+      function flashNumber(svgDoc, valueStr, repeats = 2, totalDurationMs = 1500, onComplete) {
+        if (numberFlashTimer) { clearInterval(numberFlashTimer); numberFlashTimer = null; }
+        const phases = repeats * 2; // on/off pairs
+        const phaseMs = Math.max(50, Math.floor(totalDurationMs / phases));
+        let phase = 0;
+        const doPhase = () => {
+          if (phase >= phases) {
+            clearInterval(numberFlashTimer); numberFlashTimer = null;
+            applyNumber(svgDoc, valueStr);
+            if (typeof onComplete === 'function') { try { onComplete(); } catch(_){} }
+            return;
+          }
+          const show = (phase % 2 === 0);
+          if (show) {
+            applyNumber(svgDoc, valueStr);
+          } else {
+            // 只隐藏数字区域
+            for (let pos = 1; pos <= 5; pos++) setDigit(svgDoc, pos, ' ');
+            const p1 = collectTargets(svgDoc, '小数点1');
+            const p2 = collectTargets(svgDoc, '小数点2');
+            setVisible(p1, false);
+            setVisible(p2, false);
+          }
+          phase++;
+        };
+        doPhase();
+        numberFlashTimer = setInterval(doPhase, phaseMs);
+      }
+      function hideAllDisplays(svgDoc) {
+        // 数码段与小数点
+        for (let pos = 1; pos <= 5; pos++) setDigit(svgDoc, pos, ' ');
+        const p1 = collectTargets(svgDoc, '小数点1');
+        const p2 = collectTargets(svgDoc, '小数点2');
+        setVisible(p1, false);
+        setVisible(p2, false);
+        // 点阵
+        clearDotMatrix(svgDoc);
+        // 已知符号全部关闭
+        ['斤','kg','光照强度','_x25_','蓝牙图标','分割线'].forEach(function(id){ setSymbolVisible(svgDoc, id, false); });
+      }
+
+      function stepAction(svgDoc, stepIndex) {
+        // 先停止一切动画/计时器
+        if (typeof scrollTimer !== 'undefined' && scrollTimer) { clearInterval(scrollTimer); scrollTimer = null; }
+        if (typeof libraryPlayTimer !== 'undefined' && libraryPlayTimer) { clearInterval(libraryPlayTimer); libraryPlayTimer = null; }
+        if (typeof numberRampTimer !== 'undefined' && numberRampTimer) { clearInterval(numberRampTimer); numberRampTimer = null; }
+        if (typeof numberFlashTimer !== 'undefined' && numberFlashTimer) { clearInterval(numberFlashTimer); numberFlashTimer = null; }
+        if (typeof numberDelayTimer !== 'undefined' && numberDelayTimer) { clearTimeout(numberDelayTimer); numberDelayTimer = null; }
+        if (typeof step6SwitchTimer !== 'undefined' && step6SwitchTimer) { clearTimeout(step6SwitchTimer); step6SwitchTimer = null; }
+        if (typeof dStep6CloseTimer !== 'undefined' && dStep6CloseTimer) { clearTimeout(dStep6CloseTimer); dStep6CloseTimer = null; }
+        if (typeof step1LightTimer !== 'undefined' && step1LightTimer) { clearTimeout(step1LightTimer); step1LightTimer = null; }
+        // 默认先清空
+        hideAllDisplays(svgDoc);
+        // 自动D/自动E/自动F全程显示分割线，所以在清空后立即恢复
+        if (currentAutoProfile === 'D' || currentAutoProfile === 'E' || currentAutoProfile === 'F') {
+          setSymbolVisible(svgDoc, '分割线', true);
+        }
+        // 自动F在第2步前保持光照强度符号开启，直到该步结束时才关闭
+        if (currentAutoProfile === 'F' && stepIndex === 2) {
+          setSymbolVisible(svgDoc, '光照强度', true);
+        }
+        // 关闭叠加图标（除非是自动D/自动E/自动F第3步，会在第3步逻辑中显示）
+        const overlayContainer = document.getElementById('overlaySvgContainer');
+        if (overlayContainer && !(stepIndex === 3 && (currentAutoProfile === 'D' || currentAutoProfile === 'E' || currentAutoProfile === 'F'))) {
+          overlayContainer.style.display = 'none';
+        }
+        // 新第 1 步：光照强度+Hi
+        if (stepIndex === 1) {
+          // 先清理之前的定时器
+          if (typeof step1LightTimer !== 'undefined' && step1LightTimer) { clearTimeout(step1LightTimer); step1LightTimer = null; }
+          const isAutoD = currentAutoProfile === 'D';
+          const isAutoE = currentAutoProfile === 'E';
+          const isAutoF = currentAutoProfile === 'F';
+          // 自动D/自动E/自动F全程显示分割线
+          if (isAutoD || isAutoE || isAutoF) {
+            setSymbolVisible(svgDoc, '分割线', true);
+          }
+          // 先不显示光照强度，只显示Hi
+          setSymbolVisible(svgDoc, '光照强度', false);
+          const assets = loadAssets();
+          const hi = assets.find(a => a && a.name === 'Hi');
+          if (hi && hi.frames && hi.frames.length) {
+            renderDotFrame(svgDoc, hi.frames[0]);
+          } else {
+            clearDotMatrix(svgDoc);
+          }
+          // 各方案的光照强度延迟策略
+          if (currentAutoProfile === 'B' || isAutoE || isAutoF) {
+            // 自动B：1.5秒后点亮；自动E/F：保持Hi显示2秒，光照强度1.5秒后到2秒内点亮
+            step1LightTimer = setTimeout(() => {
+              setSymbolVisible(svgDoc, '光照强度', true);
+            }, 1500);
+          } else {
+            // 其他方案立即显示光照强度
+            setSymbolVisible(svgDoc, '光照强度', true);
+          }
+        }
+        // 新第 2 步（原4）：蓝牙+斤+动画8/125.05数码渐变/降帧+分割线
+        if (stepIndex === 2) {
+          const assets = loadAssets();
+          if (currentAutoProfile === 'D' || currentAutoProfile === 'E' || currentAutoProfile === 'F') {
+            // Auto D/E/F 第2步：分割线+蓝牙+斤；动画8 -> 4s递增 + 2s闪烁；随后静态YJ并数字定格125.05（总9s，时长设置为9000ms）
+            setSymbolVisible(svgDoc, '分割线', true);
+            setSymbolVisible(svgDoc, '蓝牙图标', true);
+            setSymbolVisible(svgDoc, '斤', true);
+            const pulse = assets.find(a => a && a.name === '动画8-测量体重（中心脉冲）');
+            if (pulse && pulse.frames && pulse.frames.length) { playFrames(svgDoc, pulse.frames, 120); }
+            playNumberRamp(svgDoc, '80', '125.05', 4000, 80);
+            numberDelayTimer = setTimeout(() => {
+              if (currentAutoProfile === 'F') {
+                setSymbolVisible(svgDoc, '光照强度', false);
+              }
+              flashNumber(svgDoc, '125.05', 2, 2000, () => {
+                if (typeof libraryPlayTimer !== 'undefined' && libraryPlayTimer) { clearInterval(libraryPlayTimer); libraryPlayTimer = null; }
+                // 定格：数字125.05 + 点阵YJ
+                applyNumber(svgDoc, '125.05');
+                setTextRightAligned(svgDoc, 'YJ');
+                if (currentAutoProfile === 'F') {
+                  setSymbolVisible(svgDoc, '光照强度', false);
+                }
+              });
+            }, 4000);
+          } else {
+            setSymbolVisible(svgDoc, '分割线', true);
+            setSymbolVisible(svgDoc, '蓝牙图标', true);
+            setSymbolVisible(svgDoc, '斤', true);
+            const pulse = assets.find(a => a && a.name === '动画8-测量体重（中心脉冲）');
+            const downTip = assets.find(a => a && a.name === '下降提示');
+            if (pulse && pulse.frames && pulse.frames.length) { playFrames(svgDoc, pulse.frames, 120); }
+            playNumberRamp(svgDoc, '0.10', '125.05', 4000, 80);
+            numberDelayTimer = setTimeout(() => {
+              flashNumber(svgDoc, '125.05', 2, 2000, () => {
+                if (typeof libraryPlayTimer !== 'undefined' && libraryPlayTimer) { clearInterval(libraryPlayTimer); libraryPlayTimer = null; }
+                if (downTip && downTip.frames && downTip.frames.length) renderDotFrame(svgDoc, downTip.frames[0]); else clearDotMatrix(svgDoc);
+              });
+            }, 4000);
+          }
+        }
+        // 新第 3 步：自动A显示趋势图，自动D显示：蓝牙+斤；趋势图；数字3.5
+        if (stepIndex === 3) {
+          if (currentAutoProfile === 'A') {
+            // Auto A 第3步：只显示趋势图（2秒）
+            const assets = loadAssets();
+            const trend = assets.find(a => a && a.name === '趋势图');
+            if (trend && trend.frames && trend.frames.length) {
+              renderDotFrame(svgDoc, trend.frames[0]);
+            } else {
+              clearDotMatrix(svgDoc);
+            }
+          } else if (currentAutoProfile === 'D' || currentAutoProfile === 'E' || currentAutoProfile === 'F') {
+            // Auto D/E/F 第3步：蓝牙+斤+分割线；趋势图；数字3.5；显示叠加图标121.svg
+            setSymbolVisible(svgDoc, '蓝牙图标', true);
+            setSymbolVisible(svgDoc, '斤', true);
+            setSymbolVisible(svgDoc, '分割线', true);
+            applyNumber(svgDoc, '3.5');
+            const assets = loadAssets();
+            const trend = assets.find(a => a && a.name === '趋势图');
+            if (trend && trend.frames && trend.frames.length) renderDotFrame(svgDoc, trend.frames[0]); else clearDotMatrix(svgDoc);
+            // 显示叠加图标
+            const overlayContainer = document.getElementById('overlaySvgContainer');
+            if (overlayContainer) overlayContainer.style.display = 'block';
+          } else if (currentAutoProfile === 'B') {
+            // Auto B 第3步：爱心 前1s闪烁/后1s定帧 + 分割线 + 数字84
+            setSymbolVisible(svgDoc, '分割线', true);
+            if (typeof heartFlashTimer !== 'undefined' && heartFlashTimer) { clearInterval(heartFlashTimer); heartFlashTimer = null; }
+            if (typeof heartHoldTimer !== 'undefined' && heartHoldTimer) { clearTimeout(heartHoldTimer); heartHoldTimer = null; }
+            const assets = loadAssets();
+            const heart = assets.find(a => a && a.name === '爱心');
+            let on = true;
+            if (heart && heart.frames && heart.frames.length) {
+              renderDotFrame(svgDoc, heart.frames[0]);
+              heartFlashTimer = setInterval(() => {
+                on = !on;
+                if (on) renderDotFrame(svgDoc, heart.frames[0]); else clearDotMatrix(svgDoc);
+              }, 250);
+            }
+            heartHoldTimer = setTimeout(() => {
+              if (heartFlashTimer) { clearInterval(heartFlashTimer); heartFlashTimer = null; }
+              if (heart && heart.frames && heart.frames.length) renderDotFrame(svgDoc, heart.frames[0]);
+              setSymbolVisible(svgDoc, '分割线', true);
+              for (let pos = 1; pos <= 5; pos++) setDigit(svgDoc, pos, ' ');
+              setDigit(svgDoc, 3, '8'); setDigit(svgDoc, 4, '4');
+            }, 1000);
+          } else if (currentAutoProfile === 'C') {
+            // Auto C 第3步：分割线；先 BEY2 1s 再静态 CYJ 1s；无数字
+            setSymbolVisible(svgDoc, '分割线', true);
+            if (typeof step6SwitchTimer !== 'undefined' && step6SwitchTimer) { clearTimeout(step6SwitchTimer); step6SwitchTimer = null; }
+            const assets = loadAssets();
+            const bey = assets.find(a => a && a.name === 'BEY2');
+            if (bey && bey.frames && bey.frames.length) renderDotFrame(svgDoc, bey.frames[0]); else clearDotMatrix(svgDoc);
+            step6SwitchTimer = setTimeout(() => { setTextRightAligned(svgDoc, 'CYJ'); }, 1000);
+          } else {
+            // 非自动演示：BMI==+18.50+分割线
+            setSymbolVisible(svgDoc, '分割线', true);
+            applyNumber(svgDoc, '18.50');
+            const assets = loadAssets();
+            const bmi = assets.find(a => a && a.name === 'BMI==');
+            if (bmi && bmi.frames && bmi.frames.length) renderDotFrame(svgDoc, bmi.frames[0]); else clearDotMatrix(svgDoc);
+          }
+        }
+        // 新第 4 步：自动A显示BMI==+18.50，其它方案按原逻辑
+        if (stepIndex === 4) {
+          if (currentAutoProfile === 'A') {
+            // Auto A 第4步：分割线+BMI==+18.50（原第3步内容）
+            setSymbolVisible(svgDoc, '分割线', true);
+            applyNumber(svgDoc, '18.50');
+            const assets = loadAssets();
+            const bmi = assets.find(a => a && a.name === 'BMI==');
+            if (bmi && bmi.frames && bmi.frames.length) renderDotFrame(svgDoc, bmi.frames[0]); else clearDotMatrix(svgDoc);
+          } else if (currentAutoProfile === 'D' || currentAutoProfile === 'E' || currentAutoProfile === 'F') {
+            // Auto D/E/F 第4步：分割线；BMI== 静止帧；数字18.50（3s）；关闭叠加图标
+            setSymbolVisible(svgDoc, '分割线', true);
+            applyNumber(svgDoc, '18.50');
+            const assets = loadAssets();
+            const bmi = assets.find(a => a && a.name === 'BMI==');
+            if (bmi && bmi.frames && bmi.frames.length) renderDotFrame(svgDoc, bmi.frames[0]); else clearDotMatrix(svgDoc);
+            // 关闭叠加图标
+            const overlayContainer = document.getElementById('overlaySvgContainer');
+            if (overlayContainer) overlayContainer.style.display = 'none';
+          } else if (currentAutoProfile === 'B') {
+            // Auto B 第4步：数字125.05 + 蓝牙+斤+分割线，点阵 下降提示静帧
+            setSymbolVisible(svgDoc, '分割线', true);
+            setSymbolVisible(svgDoc, '蓝牙图标', true);
+            setSymbolVisible(svgDoc, '斤', true);
+            applyNumber(svgDoc, '125.05');
+            const assets = loadAssets();
+            const downTip = assets.find(a => a && a.name === '下降提示');
+            if (downTip && downTip.frames && downTip.frames.length) renderDotFrame(svgDoc, downTip.frames[0]); else clearDotMatrix(svgDoc);
+          } else if (currentAutoProfile === 'C') {
+            // Auto C 第4步：全部关闭（保持 hideAllDisplays 的效果）
+            // 不做任何显示设置
+          } else {
+            setSymbolVisible(svgDoc, '分割线', true);
+            setSymbolVisible(svgDoc, '_x25_', true);
+            for (let pos = 1; pos <= 5; pos++) setDigit(svgDoc, pos, ' ');
+            setDigit(svgDoc, 3, '1'); setDigit(svgDoc, 4, '5');
+            const assets = loadAssets();
+            const fat = assets.find(a => a && a.name === 'FAT');
+            if (fat && fat.frames && fat.frames.length) renderDotFrame(svgDoc, fat.frames[0]); else clearDotMatrix(svgDoc);
+          }
+        }
+        // 新第 5 步：自动A显示%+15+FAT；自动D显示爱心（1.5s闪烁+1.5s定帧，数字84）
+        if (stepIndex === 5) {
+          if (currentAutoProfile === 'A') {
+            // Auto A 第5步：%+分割线+15+FAT（原第4步内容）
+            setSymbolVisible(svgDoc, '分割线', true);
+            setSymbolVisible(svgDoc, '_x25_', true);
+            for (let pos = 1; pos <= 5; pos++) setDigit(svgDoc, pos, ' ');
+            setDigit(svgDoc, 3, '1'); setDigit(svgDoc, 4, '5');
+            const assets = loadAssets();
+            const fat = assets.find(a => a && a.name === 'FAT');
+            if (fat && fat.frames && fat.frames.length) renderDotFrame(svgDoc, fat.frames[0]); else clearDotMatrix(svgDoc);
+          } else if (currentAutoProfile === 'D' || currentAutoProfile === 'E' || currentAutoProfile === 'F') {
+            // Auto D/E/F 第5步：分割线；爱心1.5s闪烁+1.5s定帧；数字84
+            setSymbolVisible(svgDoc, '分割线', true);
+            if (typeof heartFlashTimer !== 'undefined' && heartFlashTimer) { clearInterval(heartFlashTimer); heartFlashTimer = null; }
+            if (typeof heartHoldTimer !== 'undefined' && heartHoldTimer) { clearTimeout(heartHoldTimer); heartHoldTimer = null; }
+            const assets = loadAssets();
+            const heart = assets.find(a => a && a.name === '爱心');
+            let on = true;
+            if (heart && heart.frames && heart.frames.length) {
+              renderDotFrame(svgDoc, heart.frames[0]);
+              heartFlashTimer = setInterval(() => {
+                on = !on; if (on) renderDotFrame(svgDoc, heart.frames[0]); else clearDotMatrix(svgDoc);
+              }, 250);
+            }
+            heartHoldTimer = setTimeout(() => {
+              if (heartFlashTimer) { clearInterval(heartFlashTimer); heartFlashTimer = null; }
+              if (heart && heart.frames && heart.frames.length) renderDotFrame(svgDoc, heart.frames[0]);
+              setSymbolVisible(svgDoc, '分割线', true);
+              for (let pos = 1; pos <= 5; pos++) setDigit(svgDoc, pos, ' ');
+              setDigit(svgDoc, 3, '8'); setDigit(svgDoc, 4, '4');
+            }, 1500);
+          } else if (currentAutoProfile === 'B') {
+            // Auto B 第5步：分割线；数字84（3/4位）；点阵 爱心静止
+            setSymbolVisible(svgDoc, '分割线', true);
+            for (let pos = 1; pos <= 5; pos++) setDigit(svgDoc, pos, ' ');
+            setDigit(svgDoc, 3, '8'); setDigit(svgDoc, 4, '4');
+            const assets = loadAssets();
+            const heart = assets.find(a => a && a.name === '爱心');
+            if (heart && heart.frames && heart.frames.length) renderDotFrame(svgDoc, heart.frames[0]); else clearDotMatrix(svgDoc);
+          } else {
+            // 非自动演示或自动C：爱心闪烁→定帧+分割线+数字84
+            setSymbolVisible(svgDoc, '分割线', true);
+            if (typeof heartFlashTimer !== 'undefined' && heartFlashTimer) { clearInterval(heartFlashTimer); heartFlashTimer = null; }
+            if (typeof heartHoldTimer !== 'undefined' && heartHoldTimer) { clearTimeout(heartHoldTimer); heartHoldTimer = null; }
+            const assets = loadAssets();
+            const heart = assets.find(a => a && a.name === '爱心');
+            let on = true;
+            if (heart && heart.frames && heart.frames.length) {
+              renderDotFrame(svgDoc, heart.frames[0]);
+              heartFlashTimer = setInterval(() => {
+                on = !on; if (on) renderDotFrame(svgDoc, heart.frames[0]); else clearDotMatrix(svgDoc);
+              }, 250);
+            }
+            heartHoldTimer = setTimeout(() => {
+              if (heartFlashTimer) { clearInterval(heartFlashTimer); heartFlashTimer = null; }
+              if (heart && heart.frames && heart.frames.length) renderDotFrame(svgDoc, heart.frames[0]);
+              setSymbolVisible(svgDoc, '分割线', true);
+              for (let pos = 1; pos <= 5; pos++) setDigit(svgDoc, pos, ' ');
+              setDigit(svgDoc, 3, '8'); setDigit(svgDoc, 4, '4');
+            }, 1000);
+          }
+        }
+        // 新第 6 步：自动A显示爱心闪烁+84，其它方案按原逻辑
+        if (stepIndex === 6) {
+          if (currentAutoProfile === 'A') {
+            // Auto A 第6步：爱心闪烁→定帧+分割线+数字84（原第5步内容）
+            setSymbolVisible(svgDoc, '分割线', true);
+            if (typeof heartFlashTimer !== 'undefined' && heartFlashTimer) { clearInterval(heartFlashTimer); heartFlashTimer = null; }
+            if (typeof heartHoldTimer !== 'undefined' && heartHoldTimer) { clearTimeout(heartHoldTimer); heartHoldTimer = null; }
+            const assets = loadAssets();
+            const heart = assets.find(a => a && a.name === '爱心');
+            let on = true;
+            if (heart && heart.frames && heart.frames.length) {
+              renderDotFrame(svgDoc, heart.frames[0]);
+              heartFlashTimer = setInterval(() => {
+                on = !on; if (on) renderDotFrame(svgDoc, heart.frames[0]); else clearDotMatrix(svgDoc);
+              }, 250);
+            }
+            heartHoldTimer = setTimeout(() => {
+              if (heartFlashTimer) { clearInterval(heartFlashTimer); heartFlashTimer = null; }
+              if (heart && heart.frames && heart.frames.length) renderDotFrame(svgDoc, heart.frames[0]);
+              setSymbolVisible(svgDoc, '分割线', true);
+              for (let pos = 1; pos <= 5; pos++) setDigit(svgDoc, pos, ' ');
+              setDigit(svgDoc, 3, '8'); setDigit(svgDoc, 4, '4');
+            }, 1000);
+          } else if (currentAutoProfile === 'D' || currentAutoProfile === 'E' || currentAutoProfile === 'F') {
+            // Auto D/E/F 第6步：分割线+蓝牙+斤；点阵BEY2；数字125.05；步末关闭显示（保留分割线）
+            setSymbolVisible(svgDoc, '分割线', true);
+            setSymbolVisible(svgDoc, '蓝牙图标', true);
+            setSymbolVisible(svgDoc, '斤', true);
+            applyNumber(svgDoc, '125.05');
+            const assets = loadAssets();
+            const bey = assets.find(a => a && a.name === 'BEY2');
+            if (bey && bey.frames && bey.frames.length) renderDotFrame(svgDoc, bey.frames[0]); else clearDotMatrix(svgDoc);
+            // 在2秒步结束时关闭显示，但保留分割线
+            dStep6CloseTimer = setTimeout(() => {
+              hideAllDisplays(svgDoc);
+              if (currentAutoProfile === 'D' || currentAutoProfile === 'E' || currentAutoProfile === 'F') {
+                setSymbolVisible(svgDoc, '分割线', true);
+              }
+            }, 2000);
+          } else {
+            // 非自动A：BEY2→CYJ+分割线
+            setSymbolVisible(svgDoc, '分割线', true);
+            if (typeof scrollTimer !== 'undefined' && scrollTimer) { clearInterval(scrollTimer); scrollTimer = null; }
+            if (typeof libraryPlayTimer !== 'undefined' && libraryPlayTimer) { clearInterval(libraryPlayTimer); libraryPlayTimer = null; }
+            if (typeof heartFlashTimer !== 'undefined' && heartFlashTimer) { clearInterval(heartFlashTimer); heartFlashTimer = null; }
+            if (typeof heartHoldTimer !== 'undefined' && heartHoldTimer) { clearTimeout(heartHoldTimer); heartHoldTimer = null; }
+            if (typeof step6SwitchTimer !== 'undefined' && step6SwitchTimer) { clearTimeout(step6SwitchTimer); step6SwitchTimer = null; }
+            for (let pos = 1; pos <= 5; pos++) setDigit(svgDoc, pos, ' ');
+            ['斤','kg','光照强度','_x25_','蓝牙图标','分割线'].forEach(function(id){ if(id !== '分割线') setSymbolVisible(svgDoc, id, false); });
+            const assets = loadAssets();
+            const bey = assets.find(a => a && a.name === 'BEY2');
+            if (bey && bey.frames && bey.frames.length) {
+              renderDotFrame(svgDoc, bey.frames[0]);
+            } else {
+              clearDotMatrix(svgDoc);
+            }
+            // 1秒后切换为静态显示CYJ 1秒（自动演示第6步总时长应至少2秒）
+            step6SwitchTimer = setTimeout(() => {
+              setTextRightAligned(svgDoc, 'CYJ');
+            }, 1000);
+          }
+        }
+        // 新第 7 步：自动A显示BEY2→CYJ，其它方案关闭所有显示
+        if (stepIndex === 7) {
+          if (currentAutoProfile === 'A') {
+            // Auto A 第7步：BEY2→CYJ+分割线（原第6步内容）
+            setSymbolVisible(svgDoc, '分割线', true);
+            if (typeof scrollTimer !== 'undefined' && scrollTimer) { clearInterval(scrollTimer); scrollTimer = null; }
+            if (typeof libraryPlayTimer !== 'undefined' && libraryPlayTimer) { clearInterval(libraryPlayTimer); libraryPlayTimer = null; }
+            if (typeof step6SwitchTimer !== 'undefined' && step6SwitchTimer) { clearTimeout(step6SwitchTimer); step6SwitchTimer = null; }
+            for (let pos = 1; pos <= 5; pos++) setDigit(svgDoc, pos, ' ');
+            ['斤','kg','光照强度','_x25_','蓝牙图标','分割线'].forEach(function(id){ if(id !== '分割线') setSymbolVisible(svgDoc, id, false); });
+            const assets = loadAssets();
+            const bey = assets.find(a => a && a.name === 'BEY2');
+            if (bey && bey.frames && bey.frames.length) {
+              renderDotFrame(svgDoc, bey.frames[0]);
+            } else {
+              clearDotMatrix(svgDoc);
+            }
+            // 1秒后切换为静态显示CYJ 1秒
+            step6SwitchTimer = setTimeout(() => {
+              setTextRightAligned(svgDoc, 'CYJ');
+            }, 1000);
+          } else {
+            // 非自动A：关闭所有显示
+            hideAllDisplays(svgDoc);
+          }
+        }
+        // 新第 8 步：自动A关闭所有显示
+        if (stepIndex === 8) {
+          if (currentAutoProfile === 'A') {
+            // Auto A 第8步：关闭所有显示（原第7步内容）
+            hideAllDisplays(svgDoc);
+          }
+        }
+      }
+
+      // —— 素材库：录制/保存/播放 点阵动画 ——
+      function readCurrentDotFrame(svgDoc) {
+        const rows = ROW_KEYS.length;
+        const frame = Array.from({ length: rows }, () => Array(COL_MAX).fill('0'));
+        for (let r = 0; r < rows; r++) {
+          const rowKey = ROW_KEYS[r];
+          for (let c = 1; c <= COL_MAX; c++) {
+            const nodes = collectTargets(svgDoc, rowKey + String(c));
+            const on = nodes.some(n => n.getAttribute('visibility') !== 'hidden');
+            frame[r][c - 1] = on ? '1' : '0';
+          }
+        }
+        return frame.map(row => row.join(''));
+      }
+
+      let recordTimer = null;
+      let recordFrames = [];
+      function startDotRecording(svgDoc, intervalMs = 120) {
+        if (recordTimer) clearInterval(recordTimer);
+        recordFrames = [];
+        recordTimer = setInterval(() => {
+          recordFrames.push(readCurrentDotFrame(svgDoc));
+        }, Math.max(20, intervalMs | 0));
+      }
+
+      function stopDotRecording() {
+        if (recordTimer) { clearInterval(recordTimer); recordTimer = null; }
+        return recordFrames.slice();
+      }
+
+      function renderDotFrame(svgDoc, frame) {
+        clearDotMatrix(svgDoc);
+        const rows = ROW_KEYS.length;
+        for (let r = 0; r < rows; r++) {
+          const row = frame[r] || '';
+          for (let c = 0; c < Math.min(COL_MAX, row.length); c++) {
+            if (row[c] === '1') setDotVisible(svgDoc, ROW_KEYS[r], c + 1, true);
+          }
+        }
+      }
+
+      let libraryPlayTimer = null;
+      function playFrames(svgDoc, frames, speedMs = 120) {
+        if (libraryPlayTimer) { clearInterval(libraryPlayTimer); libraryPlayTimer = null; }
+        if (!frames || !frames.length) { clearDotMatrix(svgDoc); return; }
+        let idx = 0;
+        const step = () => {
+          renderDotFrame(svgDoc, frames[idx]);
+          idx = (idx + 1) % frames.length;
+        };
+        step();
+        libraryPlayTimer = setInterval(step, Math.max(20, speedMs | 0));
+      }
+
+      const STORAGE_KEY = 'dotAssetLibrary_v1';
+      function loadAssets() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+      }
+      function saveAssets(list) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      }
+      function addAsset(name, frames) {
+        const list = loadAssets();
+        const existsIdx = list.findIndex(a => a.name === name);
+        const item = { name, frames, createdAt: Date.now() };
+        if (existsIdx >= 0) list[existsIdx] = item; else list.unshift(item);
+        saveAssets(list);
+        return list;
+      }
+      function removeAsset(name) {
+        const list = loadAssets().filter(a => a.name !== name);
+        saveAssets(list);
+        return list;
+      }
+
+      function setPositionSegments(svgDoc, positionIndex, segmentsOnSet) {
+        const pos = POS_MAP[positionIndex];
+        if (!pos) return;
+        const allKeys = Object.keys(pos);
+        allKeys.forEach(seg => {
+          const id = pos[seg];
+          const nodes = collectTargets(svgDoc, id);
+          const shouldOn = segmentsOnSet && segmentsOnSet.has(seg);
+          setVisible(nodes, !!shouldOn);
+        });
+      }
+
+      function setDigit(svgDoc, positionIndex, ch) {
+        if (!ch || ch === ' ') {
+          setPositionSegments(svgDoc, positionIndex, new Set());
+          return;
+        }
+        const segs = DIGIT_TO_SEGMENTS[ch];
+        if (!segs) {
+          setPositionSegments(svgDoc, positionIndex, new Set());
+          return;
+        }
+        // 仅点亮该位置存在的段位
+        const pos = POS_MAP[positionIndex] || {};
+        const filtered = new Set(Array.from(segs).filter(k => pos[k]));
+        setPositionSegments(svgDoc, positionIndex, filtered);
+      }
+
+      // 归一化到整数和小数两部分（只取前2位小数）
+      function parseNumberParts(value) {
+        const s = String(value).trim();
+        if (s.length === 0) return { intDigits: [], fracDigits: [] };
+        const m = s.match(/^-?\d*(?:\.\d+)?$/);
+        if (!m) return { intDigits: [], fracDigits: [] };
+        const [ip, fp = ''] = s.split('.');
+        const intDigits = (ip || '').replace(/[^0-9]/g, '').split('').filter(Boolean);
+        const fracDigits = (fp || '').replace(/[^0-9]/g, '').slice(0, 2).split('');
+        return { intDigits, fracDigits };
+      }
+
+      // 根据是否 >=200 决定是否移位，并返回 5 位显示字符
+      function normalizeToFivePositions(value) {
+        const num = Number(String(value).replace(/[^0-9.]/g, ''));
+        const { intDigits, fracDigits } = parseNumberParts(value);
+        const intStr = intDigits.join('');
+        const intVal = Number(intStr || '0');
+        const shift = isFinite(num) && intVal >= 200;
+
+        // 准备整数部分三位（不足左侧空格）
+        const i3 = intStr.padStart(3, ' ').slice(-3);
+        const f2 = (fracDigits.join('') + '  ').slice(0, 2);
+
+        if (!shift) {
+          // [百, 十, 个, 小数1, 小数2]
+          return { chars: [i3[0], i3[1], i3[2], f2[0], f2[1]], shift };
+        } else {
+          // 移位：1空、2=百、3=十、4=个、5=小数第1位（无小数第2位）
+          const hundred = i3[0];
+          const ten = i3[1];
+          const one = i3[2];
+          const frac1 = f2[0] || ' ';
+          return { chars: [' ', hundred, ten, one, frac1], shift };
+        }
+      }
+
+      function setDecimalPoints(svgDoc, shift) {
+        const p1 = collectTargets(svgDoc, '小数点1');
+        const p2 = collectTargets(svgDoc, '小数点2');
+        if (!shift) {
+          setVisible(p1, true);
+          setVisible(p2, false);
+        } else {
+          setVisible(p1, false);
+          setVisible(p2, true);
+        }
+      }
+
+      function applyNumber(svgDoc, value) {
+        const { chars, shift } = normalizeToFivePositions(value);
+        for (let pos = 1; pos <= 5; pos++) {
+          setDigit(svgDoc, pos, chars[pos - 1]);
+        }
+        setDecimalPoints(svgDoc, shift);
+      }
+
+      // ================= 点阵区 a1~f14 映射与控制 =================
+      const ROW_KEYS = ['a','b','c','d','e','f']; // 1~6 行分别对应 a~f
+      const COL_MAX = 14; // 每行 14 列
+
+      function dotId(rowKey, colIndex) {
+        return rowKey + String(colIndex);
+      }
+
+      function setDotVisible(svgDoc, rowKey, colIndex, on) {
+        if (!ROW_KEYS.includes(rowKey)) return;
+        if (colIndex < 1 || colIndex > COL_MAX) return;
+        const nodes = collectTargets(svgDoc, dotId(rowKey, colIndex));
+        setVisible(nodes, !!on);
+      }
+
+      function clearDotMatrix(svgDoc) {
+        ROW_KEYS.forEach(r => {
+          for (let c = 1; c <= COL_MAX; c++) {
+            const nodes = collectTargets(svgDoc, dotId(r, c));
+            setVisible(nodes, false);
+          }
+        });
+      }
+
+      // matrix 可为：
+      // - 6 个字符串数组，如 ["100...", ..., "..."]，每行长度<=14，'1'亮、'0'灭、其他字符视为灭
+      // - 6x14 的布尔二维数组 true/false
+      function applyDotMatrix(svgDoc, matrix) {
+        if (!matrix || !Array.isArray(matrix) || matrix.length === 0) return;
+        clearDotMatrix(svgDoc);
+        for (let r = 0; r < Math.min(ROW_KEYS.length, matrix.length); r++) {
+          const rowKey = ROW_KEYS[r];
+          const rowVal = matrix[r];
+          for (let c = 1; c <= COL_MAX; c++) {
+            let on = false;
+            if (Array.isArray(rowVal)) {
+              const cell = rowVal[c - 1];
+              on = !!cell;
+            } else if (typeof rowVal === 'string') {
+              const ch = rowVal[c - 1] || '0';
+              on = ch === '1' || ch === 'x' || ch === 'X' || ch === '#';
+            }
+            if (on) setDotVisible(svgDoc, rowKey, c, true);
+          }
+        }
+      }
+
+      function parseDotInput(raw) {
+        const s = String(raw || '').trim();
+        if (!s) return null;
+        if (s.includes('|')) {
+          return s.split('|').map(v => v.trim());
+        }
+        const coords = s.split(/[,\s;]+/).map(v => v.trim()).filter(Boolean);
+        const onList = [];
+        coords.forEach(tok => {
+          const m1 = tok.match(/^([a-fA-F])(\d{1,2})$/);
+          const m2 = tok.match(/^(\d{1,2})(?:[,\-:_](\d{1,2}))?$/);
+          if (m1) {
+            const row = m1[1].toLowerCase();
+            const col = parseInt(m1[2], 10);
+            if (ROW_KEYS.includes(row) && col >= 1 && col <= COL_MAX) onList.push([row, col]);
+          } else if (m2) {
+            const rIdx = parseInt(m2[1], 10);
+            const cIdx = parseInt(m2[2], 10);
+            const row = ROW_KEYS[rIdx - 1];
+            if (row && cIdx >= 1 && cIdx <= COL_MAX) onList.push([row, cIdx]);
+          }
+        });
+        const rows = Array.from({ length: ROW_KEYS.length }, () => Array(COL_MAX).fill(0));
+        onList.forEach(([row, col]) => { rows[ROW_KEYS.indexOf(row)][col - 1] = 1; });
+        return rows;
+      }
+
+      // 26 个字母 6x5 字模（从左到右），'1'亮、'0'灭
+      const LETTERS = {
+        'A': ['00100','01010','10001','11111','10001','10001'],
+        'B': ['11110','10001','11110','10001','10001','11110'],
+        'C': ['01110','10001','10000','10000','10001','01110'],
+        'D': ['11110','10001','10001','10001','10001','11110'],
+        'E': ['11111','10000','11111','10000','10000','11111'],
+        'F': ['11111','10000','11111','10000','10000','10000'],
+        'G': ['01111','10000','10000','10011','10001','01111'],
+        'H': ['10001','10001','11111','10001','10001','10001'],
+        'I': ['00100','00000','00100','00100','00100','00100'],
+        'J': ['00010','00010','00010','00010','00010','01110'],
+        'K': ['01001','01010','01100','01100','01010','01001'],
+        'L': ['10000','10000','10000','10000','10000','11111'],
+        'M': ['10001','11011','10101','10001','10001','10001'],
+        'N': ['10001','11001','10101','10101','10011','10001'],
+        'O': ['01110','10001','10001','10001','10001','01110'],
+        'P': ['11111','10001','11111','10000','10000','10000'],
+        'Q': ['01110','10001','10001','10001','10011','01111'],
+        'R': ['11110','10001','11110','10100','10010','10001'],
+        'S': ['11111','10000','11111','00001','00001','11111'],
+        'T': ['11111','00100','00100','00100','00100','00100'],
+        'U': ['10001','10001','10001','10001','10001','01110'],
+        'V': ['10001','10001','10001','10001','01010','00100'],
+        'W': ['00000','00000','10001','10101','01110','01010'],
+        'X': ['00000','10001','01010','00100','01010','10001'],
+        'Y': ['10001','01010','00100','00100','00100','00100'],
+        'Z': ['00000','11111','00010','00100','01000','11111'],
+        '0': ['01110','10001','10001','10001','10001','01110'],
+        '1': ['00100','01100','00100','00100','00100','01110'],
+        '2': ['01110','10001','00010','00100','01000','11111'],
+        '3': ['11111','00001','11111','00001','00001','11111'],
+        '4': ['10001','10001','11111','00001','00001','00001'],
+        '5': ['11111','10000','11111','00001','00001','11111'],
+        '6': ['11111','10000','11111','10001','10001','11111'],
+        '7': ['11111','00001','00010','00100','01000','01000'],
+        '8': ['11111','10001','11111','10001','10001','11111'],
+        '9': ['11111','10001','11111','00001','00001','11111']
+      };
+
+      // 在 6x14 点阵上绘制单个字母，startCol 为起始列(1-14)，宽度固定 5
+      function drawLetter(svgDoc, ch, startCol) {
+        const glyph = LETTERS[String(ch || '').toUpperCase()];
+        if (!glyph) return;
+        for (let r = 0; r < ROW_KEYS.length; r++) {
+          const rowKey = ROW_KEYS[r];
+          const rowStr = glyph[r] || '';
+          for (let i = 0; i < 5; i++) {
+            const bit = rowStr[i] === '1';
+            const col = startCol + i;
+            if (col >= 1 && col <= COL_MAX && bit) {
+              setDotVisible(svgDoc, rowKey, col, true);
+            }
+          }
+        }
+      }
+
+      // 写入一个字母到点阵（可选起始列，默认从1列），不自动清屏
+      function setLetter(svgDoc, ch, startCol = 1) {
+        drawLetter(svgDoc, ch, startCol);
+      }
+
+      // 写入字符串，按 5 列字宽 + 1 列间距布局（14列内自动裁剪），支持 A-Z
+      function setText(svgDoc, text = '') {
+        clearDotMatrix(svgDoc);
+        let col = 1;
+        for (const ch of String(text)) {
+          if (!LETTERS[String(ch).toUpperCase()]) { col += 6; continue; }
+          drawLetter(svgDoc, ch, col);
+          col += 6; // 5 列字宽 + 1 列空列
+          if (col > COL_MAX) break;
+        }
+      }
+
+      // —— 汉字转拼音首字母（简化近似法，基于中文排序边界）——
+      const INITIALS = ['A','B','C','D','E','F','G','H','J','K','L','M','N','O','P','Q','R','S','T','W','X','Y','Z'];
+      const BOUNDARY = ['阿','八','嚓','哒','妸','发','噶','哈','讥','咔','垃','妈','拿','哦','啪','期','然','撒','他','挖','昔','压','匝'];
+      const collator = new Intl.Collator('zh-Hans', { sensitivity: 'base' });
+      function firstLetterForHan(ch) {
+        // 非中文直接空
+        if (!/[\u4e00-\u9fff]/.test(ch)) return '';
+        for (let i = 0; i < BOUNDARY.length; i++) {
+          const start = BOUNDARY[i];
+          const end = BOUNDARY[i + 1];
+          if (i === BOUNDARY.length - 1) {
+            if (collator.compare(ch, start) >= 0) return INITIALS[i];
+          } else {
+            if (collator.compare(ch, start) >= 0 && collator.compare(ch, end) < 0) return INITIALS[i];
+          }
+        }
+        return '';
+      }
+
+      // 右对齐文字：从第14列往左排布，字宽5，字间隔1
+      function setTextRightAligned(svgDoc, raw) {
+        const input = String(raw || '');
+        // 构造仅包含字母的序列：字母保留；汉字转首字母；其他忽略
+        const letters = [];
+        for (const ch of input) {
+          if (/[A-Za-z]/.test(ch)) {
+            letters.push(ch.toUpperCase());
+          } else if (/[\u4e00-\u9fff]/.test(ch)) {
+            const init = firstLetterForHan(ch);
+            if (init) letters.push(init);
+          }
+        }
+        clearDotMatrix(svgDoc);
+        let rightCol = COL_MAX; // 14
+        for (let i = letters.length - 1; i >= 0; i--) {
+          const ch = letters[i];
+          if (!LETTERS[ch]) { rightCol -= 6; continue; }
+          const startCol = rightCol - 5 + 1; // 占 5 列
+          if (startCol < 1) break;
+          drawLetter(svgDoc, ch, startCol);
+          rightCol = startCol - 1 - 1; // 左侧留 1 列间隔
+          if (rightCol < 1) break;
+        }
+      }
+
+      // 将输入转为字母序列（字母保留、汉字转拼音首字母）
+      function collectLettersFromInput(raw) {
+        const letters = [];
+        for (const ch of String(raw || '')) {
+          if (/[A-Za-z]/.test(ch)) letters.push(ch.toUpperCase());
+          else if (/[0-9]/.test(ch)) letters.push(ch);
+          else if (/[\u4e00-\u9fff]/.test(ch)) { const init = firstLetterForHan(ch); if (init) letters.push(init); }
+        }
+        return letters;
+      }
+
+      // 构建滚动缓冲：左侧 14 列空白 + 文本(每字 5 列 + 1 列间隔) + 14 列空白
+      function buildScrollBuffer(letters) {
+        const leftPad = 14;
+        const space = 1;
+        const rows = ROW_KEYS.length;
+        const glyphWidth = 5;
+        const contentWidth = Math.max(0, letters.length * (glyphWidth + space));
+        const rightPad = 14;
+        const totalWidth = leftPad + contentWidth + rightPad;
+        const buffer = Array.from({ length: rows }, () => Array(totalWidth).fill(0));
+        let x = leftPad;
+        for (const ch of letters) {
+          const glyph = LETTERS[ch];
+          if (!glyph) { x += glyphWidth + space; continue; }
+          for (let r = 0; r < rows; r++) {
+            const rowStr = glyph[r] || '';
+            for (let i = 0; i < glyphWidth; i++) {
+              const bit = rowStr[i] === '1' ? 1 : 0;
+              if (bit) buffer[r][x + i] = 1;
+            }
+          }
+          x += glyphWidth + space;
+        }
+        return buffer;
+      }
+
+      // 渲染窗口（offset 对应缓冲的起始列），将 14 列窗口绘制到点阵 1..14 列
+      function renderScrollWindow(svgDoc, buffer, offset) {
+        clearDotMatrix(svgDoc);
+        const rows = ROW_KEYS.length;
+        const winWidth = COL_MAX;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < winWidth; c++) {
+            const bit = buffer[r][offset + c] || 0;
+            if (bit) setDotVisible(svgDoc, ROW_KEYS[r], c + 1, true);
+          }
+        }
+      }
+
+      // 播放滚动动画：从第14列开始向左逐列推进
+      let scrollTimer = null;
+      function animateTextRightAligned(svgDoc, raw, speedMs = 160, onComplete) {
+        if (scrollTimer) { clearInterval(scrollTimer); scrollTimer = null; }
+        const letters = collectLettersFromInput(raw);
+        if (!letters.length) { clearDotMatrix(svgDoc); return; }
+        const buffer = buildScrollBuffer(letters);
+        const maxOffset = buffer[0].length - COL_MAX;
+        let offset = 0;
+        renderScrollWindow(svgDoc, buffer, offset);
+        scrollTimer = setInterval(() => {
+          offset++;
+          if (offset > maxOffset) {
+            clearInterval(scrollTimer); scrollTimer = null;
+            if (typeof onComplete === 'function') { try { onComplete(); } catch(_){} }
+            return;
+          }
+          renderScrollWindow(svgDoc, buffer, offset);
+        }, Math.max(20, speedMs | 0));
+      }
+
+      // —— 开机屏：一次性显示 HI 的 6×14 图样 ——
+      const BOOT_PATTERN_ROWS = [
+        '00110011001100',
+        '00110011001100',
+        '00111111000000',
+        '00111111001100',
+        '00110011001100',
+        '00110011001100'
+      ];
+      function showBootPattern(svgDoc) {
+        clearDotMatrix(svgDoc);
+        const cols = Math.min(COL_MAX, (BOOT_PATTERN_ROWS[0] || '').length);
+        for (let r = 0; r < ROW_KEYS.length; r++) {
+          const rowStr = BOOT_PATTERN_ROWS[r] || '';
+          for (let c = 0; c < cols; c++) {
+            const bit = rowStr[c] === '1';
+            const targetCol = c + 1;
+            if (bit && targetCol >= 1 && targetCol <= COL_MAX) {
+              setDotVisible(svgDoc, ROW_KEYS[r], targetCol, true);
+            }
+          }
+        }
+      }
+
+      window.addEventListener('DOMContentLoaded', () => {
+        const obj = document.getElementById('svgObj');
+        if (!obj) return;
+        obj.addEventListener('load', () => {
+          const svgDoc = obj.contentDocument;
+          if (!svgDoc) return;
+          // 默认显示示例 123.45（点亮 小数点1，熄灭 小数点2）
+          applyNumber(svgDoc, '123.45');
+
+          // 暴露控制接口
+          window.setScaleNumber = (value) => applyNumber(svgDoc, value);
+          window.setDot = (rowKey, colIndex, on) => setDotVisible(svgDoc, rowKey, colIndex, on);
+          window.setDotMatrix = (matrix) => applyDotMatrix(svgDoc, matrix);
+          window.clearDots = () => clearDotMatrix(svgDoc);
+          window.setLetter = (ch, startCol) => setLetter(svgDoc, ch, startCol);
+          window.setText = (txt) => setText(svgDoc, txt);
+          window.setTextRightAligned = (txt) => setTextRightAligned(svgDoc, txt);
+          window.setTextRightAlignedAnimated = (txt, speedMs) => animateTextRightAligned(svgDoc, txt, speedMs);
+          window.showBootPattern = () => showBootPattern(svgDoc);
+          window.setSymbolVisible = (id, v) => setSymbolVisible(svgDoc, id, v);
+          window.toggleSymbol = (id) => toggleSymbol(svgDoc, id);
+          window.playFrames = (frames, speedMs) => playFrames(svgDoc, frames, speedMs);
+          window.startDotRecording = (ms) => startDotRecording(svgDoc, ms);
+          window.stopDotRecording = () => stopDotRecording();
+          // 步骤接口
+          let currentStep = 0;
+          window.gotoStep = (i) => { currentStep = Math.max(0, i | 0); stepAction(svgDoc, currentStep); };
+          window.nextStep = () => { currentStep += 1; stepAction(svgDoc, currentStep); };
+          window.prevStep = () => { currentStep = Math.max(0, currentStep - 1); stepAction(svgDoc, currentStep); };
+
+          // 全流程自动播放
+          let autoPlayTimer = null;
+          function clearAllPlayTimers() {
+            if (autoPlayTimer) { clearTimeout(autoPlayTimer); autoPlayTimer = null; }
+            if (typeof numberRampTimer !== 'undefined' && numberRampTimer) { clearInterval(numberRampTimer); numberRampTimer = null; }
+            if (typeof numberFlashTimer !== 'undefined' && numberFlashTimer) { clearInterval(numberFlashTimer); numberFlashTimer = null; }
+            if (typeof numberDelayTimer !== 'undefined' && numberDelayTimer) { clearTimeout(numberDelayTimer); numberDelayTimer = null; }
+            if (typeof scrollTimer !== 'undefined' && scrollTimer) { clearInterval(scrollTimer); scrollTimer = null; }
+            if (typeof libraryPlayTimer !== 'undefined' && libraryPlayTimer) { clearInterval(libraryPlayTimer); libraryPlayTimer = null; }
+            if (typeof heartFlashTimer !== 'undefined' && heartFlashTimer) { clearInterval(heartFlashTimer); heartFlashTimer = null; }
+            if (typeof heartHoldTimer !== 'undefined' && heartHoldTimer) { clearTimeout(heartHoldTimer); heartHoldTimer = null; }
+            if (typeof step6SwitchTimer !== 'undefined' && step6SwitchTimer) { clearTimeout(step6SwitchTimer); step6SwitchTimer = null; }
+            if (typeof dStep6CloseTimer !== 'undefined' && dStep6CloseTimer) { clearTimeout(dStep6CloseTimer); dStep6CloseTimer = null; }
+            if (typeof step1LightTimer !== 'undefined' && step1LightTimer) { clearTimeout(step1LightTimer); step1LightTimer = null; }
+          }
+
+          function playAllSteps() {
+            clearAllPlayTimers();
+            let stage = 1;
+            function next() {
+              if (stage > 6) return;
+              gotoStep(stage);
+              let delay = 800; // 默认0.8s
+              if (stage === 2) delay = 8000; // 4s递增+2s闪烁+2s定格
+              if (stage === 3) delay = 2000;
+              if (stage === 4) delay = 2000;
+              if (stage === 5) delay = 4000;
+              if (stage === 6) delay = 1000;
+              if (stage < 6) {
+                autoPlayTimer = setTimeout(() => { stage++; next(); }, delay);
+              }
+            }
+            next();
+          }
+
+          // 播放全部按钮绑定
+          const playAllBtn = document.getElementById('playAll');
+          if (playAllBtn) playAllBtn.addEventListener('click', playAllSteps);
+
+          // 任何"控制栏"交互都打断自动播放
+          ['applyBoot','prevStep','nextStep','applyNumber','applyMatrix','applyLetters'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.addEventListener('click', () => { clearAllPlayTimers(); });
+          });
+          ['numberInput','matrixInput','lettersInput'].forEach(id => {
+            const inp = document.getElementById(id);
+            if (inp) inp.addEventListener('input', () => { clearAllPlayTimers(); });
+          });
+
+          const numberInput = document.getElementById('numberInput');
+          const applyNumberBtn = document.getElementById('applyNumber');
+          if (numberInput && applyNumberBtn) {
+            const doApply = () => applyNumber(svgDoc, numberInput.value);
+            applyNumberBtn.addEventListener('click', doApply);
+            numberInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doApply(); });
+          }
+
+          const matrixInput = document.getElementById('matrixInput');
+          const applyMatrixBtn = document.getElementById('applyMatrix');
+          if (matrixInput && applyMatrixBtn) {
+            const doApplyM = () => {
+              const parsed = parseDotInput(matrixInput.value);
+              if (!parsed) { clearDotMatrix(svgDoc); return; }
+              applyDotMatrix(svgDoc, parsed);
+            };
+            applyMatrixBtn.addEventListener('click', doApplyM);
+            matrixInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); doApplyM(); } });
+          }
+
+          const lettersInput = document.getElementById('lettersInput');
+          const applyLettersBtn = document.getElementById('applyLetters');
+          if (lettersInput && applyLettersBtn) {
+            const doApplyL = () => animateTextRightAligned(svgDoc, lettersInput.value, 160);
+            applyLettersBtn.addEventListener('click', doApplyL);
+            lettersInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doApplyL(); });
+          }
+
+          const applyBootBtn = document.getElementById('applyBoot');
+          if (applyBootBtn) {
+            applyBootBtn.addEventListener('click', () => showBootPattern(svgDoc));
+          }
+
+          // 符号按钮绑定（斤 / kg / 光照强度 / % / 蓝牙图标 / 分割线）
+          const symbolButtons = document.querySelectorAll('.symbol-toggle');
+          symbolButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+              const id = btn.getAttribute('data-symbol');
+              const nowOn = toggleSymbol(svgDoc, id);
+              btn.classList.toggle('btn--accent', nowOn);
+            });
+          });
+
+          // 绑定上一步/下一步
+          const prevBtn = document.getElementById('prevStep');
+          const nextBtn = document.getElementById('nextStep');
+          if (prevBtn) prevBtn.addEventListener('click', () => window.prevStep());
+          if (nextBtn) nextBtn.addEventListener('click', () => window.nextStep());
+
+          // 默认状态：关闭所有显示
+          hideAllDisplays(svgDoc);
+          currentStep = 0;
+
+          // 素材库 UI 绑定
+          const assetNameInput = document.getElementById('assetNameInput');
+          const startBtn = document.getElementById('startRecord');
+          const stopSaveBtn = document.getElementById('stopSaveRecord');
+          const assetListEl = document.getElementById('assetList');
+
+          function renderAssetList() {
+            const list = loadAssets();
+            assetListEl.innerHTML = '';
+            list.forEach(item => {
+              const row = document.createElement('div');
+              row.className = 'asset-item';
+              const nameEl = document.createElement('div');
+              nameEl.className = 'asset-name';
+              nameEl.textContent = item.name;
+              const actions = document.createElement('div');
+              actions.className = 'asset-actions';
+              const playBtn = document.createElement('button');
+              playBtn.className = 'btn';
+              playBtn.textContent = '预览';
+              playBtn.addEventListener('click', () => playFrames(svgDoc, item.frames, 120));
+              const delBtn = document.createElement('button');
+              delBtn.className = 'btn';
+              delBtn.textContent = '删除';
+              delBtn.addEventListener('click', () => { removeAsset(item.name); renderAssetList(); });
+              actions.appendChild(playBtn);
+              actions.appendChild(delBtn);
+              row.appendChild(nameEl);
+              row.appendChild(actions);
+              assetListEl.appendChild(row);
+            });
+          }
+
+          renderAssetList();
+
+          // 导入/迁移内置素材：Hi（原"动画1"），爱心
+          (function ensureDefaultAssets() {
+            let list = loadAssets();
+            let changed = false;
+            // 迁移名称：将"动画1"重命名为"Hi"
+            list = list.map(function(a) {
+              if (a && a.name === '动画1') {
+                changed = true;
+                return { name: 'Hi', frames: a.frames, createdAt: a.createdAt || Date.now() };
+              }
+              return a;
+            });
+            if (changed) saveAssets(list);
+
+            const hiFrame = [
+              '00110011001100',
+              '00110011001100',
+              '00111111000000',
+              '00111111001100',
+              '00110011001100',
+              '00110011001100'
+            ];
+            const loveFrame = [
+              '00001100110000',
+              '00011111111000',
+              '00011111111000',
+              '00001111110000',
+              '00000111100000',
+              '00000011000000'
+            ];
+            const upTipFrame = [
+              '01000111000111',
+              '11100001000100',
+              '01000001000100',
+              '01000111000111',
+              '01000001000001',
+              '01000111010111'
+            ];
+            const downTipFrame = [
+              '01000111000111',
+              '01000001000100',
+              '01000001000100',
+              '01000111000111',
+              '11100001000001',
+              '01000111010111'
+            ];
+
+            const hasHi = loadAssets().some(a => a.name === 'Hi');
+            if (!hasHi) addAsset('Hi', [hiFrame]);
+
+            const hasLove = loadAssets().some(a => a.name === '爱心');
+            if (!hasLove) addAsset('爱心', [loveFrame]);
+
+            const hasUpTip = loadAssets().some(a => a.name === '上涨提示');
+            if (!hasUpTip) addAsset('上涨提示', [upTipFrame]);
+
+            const hasDownTip = loadAssets().some(a => a.name === '下降提示');
+            if (!hasDownTip) addAsset('下降提示', [downTipFrame]);
+
+            // 动画8：测量体重等待（中心脉冲） 约 32 帧
+            function makeWeighingPulseFrames() {
+              const rows = ROW_KEYS.length; // 6
+              const width = COL_MAX; // 14
+              const cL = Math.floor(width / 2); // 7
+              const cR = cL + 1; // 8
+              function emptyFrame() { return Array.from({ length: rows }, () => '0'.repeat(width)); }
+              function setRowSpan(frame, r, c1, c2) {
+                if (r < 0 || r >= rows) return;
+                const start = Math.max(1, Math.min(c1, c2));
+                const end = Math.min(width, Math.max(c1, c2));
+                const arr = frame[r].split('');
+                for (let c = start; c <= end; c++) arr[c - 1] = '1';
+                frame[r] = arr.join('');
+              }
+              function setCol(frame, c, r1, r2) {
+                const cc = Math.max(1, Math.min(width, c));
+                const start = Math.max(0, Math.min(r1, r2));
+                const end = Math.min(rows - 1, Math.max(r1, r2));
+                for (let r = start; r <= end; r++) {
+                  const arr = frame[r].split('');
+                  arr[cc - 1] = '1';
+                  frame[r] = arr.join('');
+                }
+              }
+              const frames = [];
+              const maxR = 6; // 半径向左右扩展最多 6 列
+              const radii = [];
+              for (let r = 0; r <= maxR; r++) radii.push(r);
+              for (let r = maxR - 1; r >= 1; r--) radii.push(r);
+              radii.forEach(r => {
+                const fr = emptyFrame();
+                // 中心双行主体：行2、3（索引2、3）
+                setRowSpan(fr, 2, cL - r, cR + r);
+                setRowSpan(fr, 3, cL - r, cR + r);
+                // 次级发光：行1、4（索引1、4）比主体少一列扩散
+                const r2 = Math.max(0, r - 1);
+                setRowSpan(fr, 1, cL - r2, cR + r2);
+                setRowSpan(fr, 4, cL - r2, cR + r2);
+                // 细微中心线：行0、5（索引0、5）在较大半径时仅点亮中心两列
+                if (r <= 1) {
+                  setCol(fr, cL, 0, 0); setCol(fr, cR, 0, 0);
+                  setCol(fr, cL, 5, 5); setCol(fr, cR, 5, 5);
+                } else if (r <= 3) {
+                  setRowSpan(fr, 0, cL - 1, cR + 1);
+                  setRowSpan(fr, 5, cL - 1, cR + 1);
+                } else {
+                  setRowSpan(fr, 0, cL, cR); // 仅中心两列
+                  setRowSpan(fr, 5, cL, cR);
+                }
+                frames.push(fr);
+              });
+              return frames;
+            }
+
+            const hasWeighingPulse = loadAssets().some(a => a.name === '动画8-测量体重（中心脉冲）');
+            if (!hasWeighingPulse) {
+              const pulseFrames = makeWeighingPulseFrames();
+              addAsset('动画8-测量体重（中心脉冲）', pulseFrames);
+            }
+
+            // 动画9：测量体重等待（扫描） 左→右→左 扫描带，带软边
+            function makeWeighingScanFrames() {
+              const rows = ROW_KEYS.length; // 6
+              const width = COL_MAX; // 14
+              const frames = [];
+              function emptyFrame() { return Array.from({ length: rows }, () => '0'.repeat(width)); }
+              function setCol(frame, c, r1, r2) {
+                const cc = Math.max(1, Math.min(width, c));
+                const start = Math.max(0, Math.min(r1, r2));
+                const end = Math.min(rows - 1, Math.max(r1, r2));
+                for (let r = start; r <= end; r++) {
+                  const arr = frame[r].split('');
+                  arr[cc - 1] = '1';
+                  frame[r] = arr.join('');
+                }
+              }
+              function addSoftEdge(frame, c) {
+                if (c < 1 || c > width) return;
+                for (let r = 0; r < rows; r++) {
+                  if ((r + c) % 2 === 0) {
+                    const arr = frame[r].split('');
+                    arr[c - 1] = '1';
+                    frame[r] = arr.join('');
+                  }
+                }
+              }
+              // 左->右
+              const sweep = [];
+              for (let c = 1; c <= width; c++) {
+                const fr = emptyFrame();
+                // 主亮带：中间一列 + 邻列形成 3 列宽的亮带
+                setCol(fr, c, 0, rows - 1);
+                // 软边（左右各1列，点状以柔和边缘）
+                addSoftEdge(fr, c - 1);
+                addSoftEdge(fr, c + 1);
+                sweep.push(fr);
+              }
+              // 往返：拼接反向序列（去头去尾避免卡顿）
+              frames.push(...sweep);
+              frames.push(...sweep.slice(1, -1).reverse());
+              return frames;
+            }
+
+            const hasWeighingScan = loadAssets().some(a => a.name === '动画9-测量体重（扫描）');
+            if (!hasWeighingScan) {
+              const scanFrames = makeWeighingScanFrames();
+              addAsset('动画9-测量体重（扫描）', scanFrames);
+            }
+
+            const bmiFrame = [
+              '01000100010010',
+              '01000110110010',
+              '01000101010010',
+              '01110100010010',
+              '01010100010010',
+              '01110100010010'
+            ];
+            const hasBMI = loadAssets().some(a => a.name === 'BMI');
+            if (!hasBMI) addAsset('BMI', [bmiFrame]);
+
+            const fatFrame = [
+              '11100110011111',
+              '10001001000100',
+              '11101111000100',
+              '10001001000100',
+              '10001001000100',
+              '10001001000100'
+            ];
+            const hasFAT = loadAssets().some(a => a.name === 'FAT');
+            if (!hasFAT) addAsset('FAT', [fatFrame]);
+
+            const beyFrame = [
+              '00000000000000',
+              '10001000101110',
+              '10000101001000',
+              '11100010001110',
+              '10100010001000',
+              '11100010001110'
+            ];
+            const hasBEY = loadAssets().some(a => a.name === 'BEY');
+            if (!hasBEY) addAsset('BEY', [beyFrame]);
+
+            // 新增素材：趋势图（单帧）
+            const trendFrame = [
+              '10000000011000',
+              '01000000100100',
+              '00111001000010',
+              '00000100000001',
+              '00000010000000',
+              '00000000000000'
+            ];
+            const hasTrend = loadAssets().some(a => a.name === '趋势图');
+            if (!hasTrend) addAsset('趋势图', [trendFrame]);
+
+            // 新增素材：AGE（单帧）
+            const ageFrame = [
+              '01100111101111',
+              '10010100001000',
+              '11110101101111',
+              '10010100101000',
+              '10010100101000',
+              '10010111101111'
+            ];
+            const hasAGE = loadAssets().some(a => a.name === 'AGE');
+            if (!hasAGE) addAsset('AGE', [ageFrame]);
+
+            // 新增素材：BMI==（单帧）
+            const bmiEqFrame = [
+              '01110010001010',
+              '01001011011010',
+              '01110010101010',
+              '01001010001010',
+              '01001010001010',
+              '01111010001010'
+            ];
+            const hasBMIEq = loadAssets().some(a => a.name === 'BMI==');
+            if (!hasBMIEq) addAsset('BMI==', [bmiEqFrame]);
+
+            // 新增素材：MUS（单帧）
+            const musFrame = [
+              '10001010100111',
+              '11011010101000',
+              '10101010100110',
+              '10001010100001',
+              '10001010100001',
+              '10001011101110'
+            ];
+            const hasMUS = loadAssets().some(a => a.name === 'MUS');
+            if (!hasMUS) addAsset('MUS', [musFrame]);
+
+            // 新增素材：TBW（单帧）
+            const tbwFrame = [
+              '11101110010001',
+              '01001001010001',
+              '01001110010001',
+              '01001001010101',
+              '01001001011011',
+              '01001111010001'
+            ];
+            const hasTBW = loadAssets().some(a => a.name === 'TBW');
+            if (!hasTBW) addAsset('TBW', [tbwFrame]);
+
+            // 新增素材：BEY2（单帧）
+            const bey2Frame = [
+              '11100100010111',
+              '10010010100100',
+              '11100001000111',
+              '10010001000100',
+              '10010001000100',
+              '11110001000111'
+            ];
+            const hasBEY2 = loadAssets().some(a => a.name === 'BEY2');
+            if (!hasBEY2) addAsset('BEY2', [bey2Frame]);
+
+            // 新增素材：BOn（单帧）
+            const bonFrame = [
+              '11100011001111',
+              '10010100101001',
+              '11100100101001',
+              '10010100101001',
+              '10010100101001',
+              '11110011001001'
+            ];
+            const hasBOn = loadAssets().some(a => a.name === 'BOn');
+            if (!hasBOn) addAsset('BOn', [bonFrame]);
+
+            // 新增素材：PRO（单帧）
+            const proFrame = [
+              '11100111000110',
+              '10010100101001',
+              '11100111101001',
+              '10000110001001',
+              '10000101001001',
+              '10000100100110'
+            ];
+            const hasPRO = loadAssets().some(a => a.name === 'PRO');
+            if (!hasPRO) addAsset('PRO', [proFrame]);
+
+            renderAssetList();
+          })();
+
+          if (startBtn) {
+            startBtn.addEventListener('click', () => {
+              startDotRecording(svgDoc, 120);
+              startBtn.disabled = true;
+              stopSaveBtn.disabled = false;
+            });
+          }
+          if (stopSaveBtn) {
+            stopSaveBtn.disabled = true;
+            stopSaveBtn.addEventListener('click', () => {
+              const frames = stopDotRecording();
+              startBtn.disabled = false;
+              stopSaveBtn.disabled = true;
+              const name = (assetNameInput && assetNameInput.value.trim()) || `动画${new Date().toLocaleTimeString()}`;
+              if (frames && frames.length) {
+                addAsset(name, frames);
+                renderAssetList();
+              }
+            });
+          }
+        }, { once: true });
+      });
+
+      // === 自动演示功能 ===
+      let autoDemoTimer = null;
+      let autoStepIdx = 1;
+      let autoDemoActive = false;
+      // 方案时长（毫秒）
+      let demoStepDurationsA = [2000, 8000, 2000, 1800, 1800, 2000, 2000, 2000];
+      let demoStepDurationsB = [2000, 8000, 2000, 2000, 2000, 2000, 2000];
+      let demoStepDurationsC = [800, 8000, 2000, 2000];
+      let demoStepDurationsD = [2000, 9000, 3000, 3000, 3000, 2000];
+      let demoStepDurationsE = [2000, 9000, 3000, 3000, 3000, 2000];
+      let demoStepDurationsF = [2000, 9000, 3000, 3000, 3000, 2000];
+      let demoStepDurations = demoStepDurationsA;
+      let currentAutoProfile = 'A';
+
+      // 必须在 DOM 内容加载完成后绑定按钮
+      document.addEventListener('DOMContentLoaded', function() {
+        const autoDemoPlayBtn = document.getElementById('autoDemoPlayBtn');
+        const autoDemoStopBtn = document.getElementById('autoDemoStopBtn');
+        const autoDemoProfile = document.getElementById('autoDemoProfile');
+        const prevBtn = document.getElementById('prevStep');
+        const nextBtn = document.getElementById('nextStep');
+
+        if (autoDemoProfile) {
+          autoDemoProfile.value = currentAutoProfile;
+          autoDemoProfile.addEventListener('change', function() {
+            let v = 'A';
+            if (autoDemoProfile.value === 'B') v = 'B';
+            if (autoDemoProfile.value === 'C') v = 'C';
+            if (autoDemoProfile.value === 'D') v = 'D';
+            if (autoDemoProfile.value === 'E') v = 'E';
+            if (autoDemoProfile.value === 'F') v = 'F';
+            window.setAutoProfile(v);
+          });
+        }
+
+        function getDurationsByProfile(profile) {
+          switch (profile) {
+            case 'B': return demoStepDurationsB;
+            case 'C': return demoStepDurationsC;
+            case 'D': return demoStepDurationsD;
+            case 'E': return demoStepDurationsE;
+            case 'F': return demoStepDurationsF;
+            default: return demoStepDurationsA;
+          }
+        }
+
+        window.setAutoProfile = function(name) {
+          let v = 'A';
+          if (name === 'B') v = 'B';
+          if (name === 'C') v = 'C';
+          if (name === 'D') v = 'D';
+          if (name === 'E') v = 'E';
+          if (name === 'F') v = 'F';
+          currentAutoProfile = v;
+          demoStepDurations = getDurationsByProfile(v);
+          if (autoDemoProfile) autoDemoProfile.value = v;
+        };
+
+        window.playAutoDemo = function() {
+          if (autoDemoActive) return;
+          // 确保使用当前方案对应的时长
+          demoStepDurations = getDurationsByProfile(currentAutoProfile);
+          autoDemoActive = true;
+          autoStepIdx = 1;
+          if (prevBtn) prevBtn.disabled = true;
+          if (nextBtn) nextBtn.disabled = true;
+          if (autoDemoPlayBtn) autoDemoPlayBtn.disabled = true;
+          if (autoDemoStopBtn) autoDemoStopBtn.disabled = false;
+
+          function gotoAutoStep() {
+            window.gotoStep(autoStepIdx);
+            if (autoStepIdx < demoStepDurations.length) {
+              autoDemoTimer = setTimeout(() => {
+                autoStepIdx++;
+                gotoAutoStep();
+              }, demoStepDurations[autoStepIdx - 1]);
+            } else {
+              window.stopAutoDemo();
+            }
+          }
+
+          gotoAutoStep();
+        };
+
+        window.stopAutoDemo = function() {
+          if (autoDemoTimer) { clearTimeout(autoDemoTimer); autoDemoTimer = null; }
+          autoDemoActive = false;
+          if (prevBtn) prevBtn.disabled = false;
+          if (nextBtn) nextBtn.disabled = false;
+          if (autoDemoPlayBtn) autoDemoPlayBtn.disabled = false;
+          if (autoDemoStopBtn) autoDemoStopBtn.disabled = true;
+        };
+
+        if (autoDemoPlayBtn) autoDemoPlayBtn.addEventListener('click', window.playAutoDemo);
+        if (autoDemoStopBtn) autoDemoStopBtn.addEventListener('click', window.stopAutoDemo);
+
+        // 叠加图标控制
+        const overlayContainer = document.getElementById('overlaySvgContainer');
+        const overlaySizeInput = document.getElementById('overlaySizeInput');
+        const overlaySizeValue = document.getElementById('overlaySizeValue');
+        const overlayXInput = document.getElementById('overlayXInput');
+        const overlayXValue = document.getElementById('overlayXValue');
+        const overlayYInput = document.getElementById('overlayYInput');
+        const overlayYValue = document.getElementById('overlayYValue');
+        const toggleOverlayBtn = document.getElementById('toggleOverlay');
+
+        function updateOverlayPosition() {
+          if (!overlayContainer) return;
+          const x = overlayXInput ? overlayXInput.value : 46;
+          const y = overlayYInput ? overlayYInput.value : 20;
+          overlayContainer.style.left = x + '%';
+          overlayContainer.style.top = y + '%';
+        }
+
+        if (overlaySizeInput && overlaySizeValue) {
+          overlaySizeInput.addEventListener('input', function() {
+            const size = this.value;
+            overlaySizeValue.textContent = size;
+            if (overlayContainer) {
+              overlayContainer.style.width = size + 'px';
+            }
+          });
+        }
+
+        if (overlayXInput && overlayXValue) {
+          overlayXInput.addEventListener('input', function() {
+            const x = this.value;
+            overlayXValue.textContent = x;
+            updateOverlayPosition();
+          });
+        }
+
+        if (overlayYInput && overlayYValue) {
+          overlayYInput.addEventListener('input', function() {
+            const y = this.value;
+            overlayYValue.textContent = y;
+            updateOverlayPosition();
+          });
+        }
+
+        if (toggleOverlayBtn && overlayContainer) {
+          toggleOverlayBtn.addEventListener('click', function() {
+            const isVisible = overlayContainer.style.display !== 'none';
+            overlayContainer.style.display = isVisible ? 'none' : 'block';
+            toggleOverlayBtn.textContent = isVisible ? '显示' : '隐藏';
+          });
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
