@@ -615,8 +615,8 @@
             } else {
               clearDotMatrix(svgDoc);
             }
-          } else if (currentAutoProfile === 'D' || currentAutoProfile === 'E' || currentAutoProfile === 'F') {
-            // Auto D/E/F 第3步：蓝牙+斤+分割线；趋势图；数字3.5；显示叠加图标121.svg
+          } else if (currentAutoProfile === 'D' || currentAutoProfile === 'E') {
+            // Auto D/E 第3步：蓝牙+斤+分割线；趋势图；数字3.5；显示叠加图标121.svg
             setSymbolVisible(svgDoc, '蓝牙图标', true);
             setSymbolVisible(svgDoc, '斤', true);
             setSymbolVisible(svgDoc, '分割线', true);
@@ -625,6 +625,16 @@
             const trend = assets.find(a => a && a.name === '趋势图');
             if (trend && trend.frames && trend.frames.length) renderDotFrame(svgDoc, trend.frames[0]); else clearDotMatrix(svgDoc);
             // 显示叠加图标
+            const overlayContainer = document.getElementById('overlaySvgContainer');
+            if (overlayContainer) overlayContainer.style.display = 'block';
+          } else if (currentAutoProfile === 'F') {
+            // Auto F 第3步：斤+分割线；趋势图；数字3.5；显示叠加图标121.svg（不显示蓝牙）
+            setSymbolVisible(svgDoc, '斤', true);
+            setSymbolVisible(svgDoc, '分割线', true);
+            applyNumber(svgDoc, '3.5');
+            const assets = loadAssets();
+            const trend = assets.find(a => a && a.name === '趋势图');
+            if (trend && trend.frames && trend.frames.length) renderDotFrame(svgDoc, trend.frames[0]); else clearDotMatrix(svgDoc);
             const overlayContainer = document.getElementById('overlaySvgContainer');
             if (overlayContainer) overlayContainer.style.display = 'block';
           } else if (currentAutoProfile === 'B') {
@@ -793,8 +803,8 @@
               for (let pos = 1; pos <= 5; pos++) setDigit(svgDoc, pos, ' ');
               setDigit(svgDoc, 3, '8'); setDigit(svgDoc, 4, '4');
             }, 1000);
-          } else if (currentAutoProfile === 'D' || currentAutoProfile === 'E' || currentAutoProfile === 'F') {
-            // Auto D/E/F 第6步：分割线+蓝牙+斤；点阵BEY2；数字125.05；步末关闭显示（保留分割线）
+          } else if (currentAutoProfile === 'D' || currentAutoProfile === 'E') {
+            // Auto D/E 第6步：分割线+蓝牙+斤；点阵BEY2；数字125.05；步末关闭显示（保留分割线）
             setSymbolVisible(svgDoc, '分割线', true);
             setSymbolVisible(svgDoc, '蓝牙图标', true);
             setSymbolVisible(svgDoc, '斤', true);
@@ -805,9 +815,18 @@
             // 在2秒步结束时关闭显示，但保留分割线
             dStep6CloseTimer = setTimeout(() => {
               hideAllDisplays(svgDoc);
-              if (currentAutoProfile === 'D' || currentAutoProfile === 'E') {
-                setSymbolVisible(svgDoc, '分割线', true);
-              }
+              setSymbolVisible(svgDoc, '分割线', true);
+            }, 2000);
+          } else if (currentAutoProfile === 'F') {
+            // Auto F 第6步：分割线+斤；点阵BEY2；数字125.05；步末关闭显示（不再保留分割线/蓝牙）
+            setSymbolVisible(svgDoc, '分割线', true);
+            setSymbolVisible(svgDoc, '斤', true);
+            applyNumber(svgDoc, '125.05');
+            const assets = loadAssets();
+            const bey = assets.find(a => a && a.name === 'BEY2');
+            if (bey && bey.frames && bey.frames.length) renderDotFrame(svgDoc, bey.frames[0]); else clearDotMatrix(svgDoc);
+            dStep6CloseTimer = setTimeout(() => {
+              hideAllDisplays(svgDoc);
             }, 2000);
           } else {
             // 非自动A：BEY2→CYJ+分割线
