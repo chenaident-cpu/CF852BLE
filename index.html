@@ -805,7 +805,7 @@
             // 在2秒步结束时关闭显示，但保留分割线
             dStep6CloseTimer = setTimeout(() => {
               hideAllDisplays(svgDoc);
-              if (currentAutoProfile === 'D' || currentAutoProfile === 'E' || currentAutoProfile === 'F') {
+              if (currentAutoProfile === 'D' || currentAutoProfile === 'E') {
                 setSymbolVisible(svgDoc, '分割线', true);
               }
             }, 2000);
